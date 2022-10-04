@@ -1,0 +1,76 @@
+use bevy::prelude::*;
+use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
+use bevy_inspector_egui::WorldInspectorPlugin;
+
+use particle_physic_sim::{ParticlePlugin, HEIGHT, WIDTH, CAM_X, CAM_Y, CAM_Z};
+
+fn main() {
+    App::new()
+        .insert_resource(WindowDescriptor {
+            width: WIDTH,
+            height: HEIGHT,
+            title: "Particle Simulator".to_string(),
+            resizable: false,
+            ..Default::default()
+        })
+        .add_plugins(DefaultPlugins)
+        .add_startup_system(setup_light)
+        .add_startup_system(setup_camera)
+//        .add_startup_system(setup_floor)
+        .add_plugin(ParticlePlugin)
+        .add_plugin(NoCameraPlayerPlugin)
+        .add_plugin(WorldInspectorPlugin::new())
+        .run();
+}
+
+fn setup_light(mut commands: Commands) {
+    // directional 'sun' light
+    const HALF_SIZE: f32 = 10.0;
+    commands.spawn_bundle(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            // Configure the projection to better fit the scene
+            shadow_projection: OrthographicProjection {
+                left: -HALF_SIZE,
+                right: HALF_SIZE,
+                bottom: -HALF_SIZE,
+                top: HALF_SIZE,
+                near: -10.0 * HALF_SIZE,
+                far: 10.0 * HALF_SIZE,
+                ..default()
+            },
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(0.0, 2.0, 0.0),
+            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            ..default()
+        },
+        ..default()
+    });
+}
+
+fn setup_camera (mut commands: Commands) {
+
+    // camera
+    let camera = Camera3dBundle {
+        transform: Transform::from_xyz(CAM_X, CAM_Y, CAM_Z).looking_at(Vec3::ZERO, Vec3::Y),
+        ..Default::default()
+    };
+
+    // add plugin
+    commands.spawn_bundle(camera).insert(FlyCam);
+}
+
+fn setup_floor(mut commands: Commands,
+               mut meshes: ResMut<Assets<Mesh>>,
+               mut materials: ResMut<Assets<StandardMaterial>>,
+               ) {
+       // plane
+    commands.spawn_bundle(PbrBundle {
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 5000.0 })),
+        material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
+        transform: Transform::from_xyz(0.0, -0.01, 0.0),
+        ..default()
+    });
+}
