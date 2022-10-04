@@ -11,10 +11,10 @@ pub mod consts {
     pub const SUBDIV: usize = 1;
     pub const P_RAD: f32 = 1.;
 
-    pub const R_ATR: f32 = 10.0;
+    pub const R_ATR: f32 = 7.0;
     pub const R_REP: f32 = 5.;
     pub const F_ATR: f32 = 0.5;
-    pub const F_REP: f32 = 2.;
+    pub const F_REP: f32 = 1.;
 
     pub const AIR_F: f32 = 0.99;
     pub const GRAVITY: f32 = 1.0;
