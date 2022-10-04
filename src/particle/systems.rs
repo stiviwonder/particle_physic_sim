@@ -23,9 +23,9 @@ pub fn startup_particles(
         let p = Particle {
             id: i,
             pos: Vec3 {
-                x: init_pos.x + offsize,
+                x: init_pos.x + offsize * 0.1,
                 y: init_pos.y + offsize,
-                z: init_pos.z - offsize,
+                z: init_pos.z,
             },
             radius: P_RAD,
             mass: 1.,
@@ -60,7 +60,7 @@ pub fn startup_particles(
             init_pos.z += 1.;
             offsize = 0.;
         } else {
-            offsize += 5.0;
+            offsize += 2.0;
         }
     }
 
