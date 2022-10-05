@@ -25,7 +25,7 @@ pub fn startup_particles(
             pos: Vec3 {
                 x: init_pos.x + offsize * 0.1,
                 y: init_pos.y + offsize,
-                z: init_pos.z,
+                z: init_pos.z + offsize * 0.1,
             },
             radius: P_RAD,
             mass: 1.,
@@ -57,10 +57,10 @@ pub fn startup_particles(
         .insert(p);
 
         if i % 10 == 0 {
-            init_pos.z += 1.;
+            init_pos.z += 0.1;
             offsize = 0.;
         } else {
-            offsize += 2.0;
+            offsize += 0.1;
         }
     }
 
@@ -81,6 +81,20 @@ pub fn get_distance(p1: Vec3, p2: Vec3) -> f32 {
 pub fn add_gravity(vel: Vec3) -> Vec3 {
 
     return vel - Vec3::Y * GRAVITY;
+}
+
+pub fn on_xleft_wall(pos: Vec3) -> bool {
+    return pos.x <= -WALL;
+}
+pub fn on_xright_wall(pos: Vec3) -> bool {
+    return pos.x >= WALL;
+}
+
+pub fn on_zleft_wall(pos: Vec3) -> bool {
+    return pos.z <= -WALL;
+}
+pub fn on_zright_wall(pos: Vec3) -> bool {
+    return pos.z >= WALL;
 }
 
 pub fn get_new_pos(
@@ -114,8 +128,36 @@ pub fn get_new_pos(
             new_vel.y = new_vel.y.abs() * FLOOR_F;
         }
 
+        if on_xright_wall(p1.pos) {
+            new_vel.x -= new_vel.x * 2.;
+
+        } 
+        if on_xleft_wall(p1.pos) {
+            new_vel.x += new_vel.x * -2.;
+
+        } 
+        if on_zleft_wall(p1.pos) {
+            new_vel.z -= new_vel.z * 2.;
+
+        } 
+        if on_zright_wall(p1.pos) {
+            new_vel.z += new_vel.z * -2.;
+
+        }
+
         new_vel *= AIR_F;
-        let new_pos = p1.pos + new_vel * time.delta_seconds();
+        let mut new_pos = p1.pos + new_vel * time.delta_seconds();
+
+        // FIXME: no me seas un warro >:(
+        if new_pos.x < -WALL {
+            new_pos.x = -WALL;
+        } else if new_pos.x > WALL {
+            new_pos.x = WALL;
+        } else if new_pos.z < -WALL {
+            new_pos.z = -WALL;
+        } else if new_pos.z > WALL {
+            new_pos.z = WALL;
+        }
         par_pos.vec[i] = new_pos;
         par_vels.vec[i] = new_vel;
         i += 1;
