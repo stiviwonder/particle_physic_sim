@@ -68,7 +68,7 @@ fn setup_floor(mut commands: Commands,
                ) {
        // plane
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 5000.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
         material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
         transform: Transform::from_xyz(0.0, -0.01, 0.0),
         ..default()
