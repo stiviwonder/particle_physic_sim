@@ -1,5 +1,6 @@
 // NOTE: una mierda para hacer dos cambiar para spawn generico de particulas
 use bevy::prelude::*;
+use bevy_flycam::FlyCam;
 use super::entities::*;
 
 use super::consts::*;
@@ -22,6 +23,7 @@ pub fn startup_particles(
     for i in 0..NUM_PAR {
         let p = Particle {
             id: i,
+            grp: 0,
             pos: Vec3 {
                 x: init_pos.x + offsize * 0.1,
                 y: init_pos.y + offsize,
@@ -30,7 +32,7 @@ pub fn startup_particles(
             radius: P_RAD,
             mass: 1.,
             vel: Vec3::ZERO,
-            attrac: Attraction {
+            att: Attraction {
                 radius: P_RAD + R_ATR,
                 force: F_ATR,
             },
@@ -83,20 +85,6 @@ pub fn add_gravity(vel: Vec3) -> Vec3 {
     return vel - Vec3::Y * GRAVITY;
 }
 
-pub fn on_xleft_wall(pos: Vec3) -> bool {
-    return pos.x <= -WALL;
-}
-pub fn on_xright_wall(pos: Vec3) -> bool {
-    return pos.x >= WALL;
-}
-
-pub fn on_zleft_wall(pos: Vec3) -> bool {
-    return pos.z <= -WALL;
-}
-pub fn on_zright_wall(pos: Vec3) -> bool {
-    return pos.z >= WALL;
-}
-
 pub fn get_new_pos(
     time: Res<Time>,
     particles: Query<&Particle>,
@@ -104,7 +92,6 @@ pub fn get_new_pos(
     mut par_vels: ResMut<ParticleVelocities>,
 ) {
     let mut i = 0;
-    let minus = Vec3::new(-1.0, -1.0, -1.0);
 
     for p1 in particles.iter() {
         let mut new_vel = p1.vel;
@@ -114,11 +101,10 @@ pub fn get_new_pos(
                 let dis = get_distance(p1.pos, p2.pos);
 
                 if dis <= p2.rep.radius {
-                    let dir = minus * (p2.pos - p1.pos);
-                    new_vel += dir.normalize_or_zero() * p1.get_accel(p2.rep.force);
-                } else if dis <= p2.attrac.radius {
-                    let dir = p2.pos - p1.pos;
-                    new_vel += dir.normalize_or_zero() * p1.get_accel(p2.attrac.force);
+                    new_vel += p2.repulse(p1);
+
+                } else if dis <= p2.att.radius  && p1.grp == p2.grp {
+                    new_vel += p2.attract(p1);
                 }
             }
         }
@@ -128,36 +114,12 @@ pub fn get_new_pos(
             new_vel.y = new_vel.y.abs() * FLOOR_F;
         }
 
-        if on_xright_wall(p1.pos) {
-            new_vel.x -= new_vel.x * 2.;
-
-        } 
-        if on_xleft_wall(p1.pos) {
-            new_vel.x += new_vel.x * -2.;
-
-        } 
-        if on_zleft_wall(p1.pos) {
-            new_vel.z -= new_vel.z * 2.;
-
-        } 
-        if on_zright_wall(p1.pos) {
-            new_vel.z += new_vel.z * -2.;
-
-        }
-
         new_vel *= AIR_F;
-        let mut new_pos = p1.pos + new_vel * time.delta_seconds();
 
-        // FIXME: no me seas un warro >:(
-        if new_pos.x < -WALL {
-            new_pos.x = -WALL;
-        } else if new_pos.x > WALL {
-            new_pos.x = WALL;
-        } else if new_pos.z < -WALL {
-            new_pos.z = -WALL;
-        } else if new_pos.z > WALL {
-            new_pos.z = WALL;
-        }
+        let new_pos = p1.pos + new_vel * time.delta_seconds();
+
+
+        // Update resources for sync
         par_pos.vec[i] = new_pos;
         par_vels.vec[i] = new_vel;
         i += 1;
@@ -180,5 +142,57 @@ pub fn sync_par_data(
 pub fn render_particle_sim(mut query: Query<(&mut Transform, With<Particle>, &Particle)>) {
     for (mut t, _, p) in query.iter_mut() {
         t.translation = p.pos;
+    }
+}
+
+pub fn shoot_particle (
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    kb: Res<Input<KeyCode>>,
+    mut par_pos: ResMut<ParticlePositions>,
+    mut par_vels: ResMut<ParticleVelocities>,
+    cam_pos: Query<&Transform, With<FlyCam>>,
+    ) {
+    if kb.pressed(KeyCode::F) {
+        let i = par_pos.vec.len();
+
+        for cam in cam_pos.get_single() {
+
+            let local_z = cam.local_z();
+
+            let init_vel = local_z - local_z * 100.;
+            println!("init_vel {}", init_vel);
+            let p = Particle {
+                id: i,
+                grp: 1,
+                pos: cam.translation,
+                radius: P_RAD,
+                mass: 1.,
+                vel: init_vel,
+                att: Attraction {
+                    radius: P_RAD + R_ATR,
+                    force: F_ATR,
+                },
+                rep: Repulsion {
+                    radius: P_RAD + R_REP,
+                    force: F_REP,
+                },
+            };
+            par_pos.vec.push(p.pos);
+            par_vels.vec.push(p.vel);
+
+            commands
+                .spawn_bundle(PbrBundle {
+                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+                        radius: p.radius,
+                        subdivisions: SUBDIV,
+                    })),
+                    material: materials.add(Color::RED.into()),
+                    transform: Transform::from_xyz(p.pos.x, p.pos.y, p.pos.z),
+                    ..default()
+                })
+            .insert(p);
+        }
     }
 }

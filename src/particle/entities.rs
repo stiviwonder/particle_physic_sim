@@ -4,11 +4,12 @@ use bevy::prelude::*;
 #[derive(Component)]
 pub struct Particle {
     pub id: usize,
+    pub grp: usize,
     pub pos: Vec3,
     pub radius: f32,
     pub mass: f32,
     pub vel: Vec3,
-    pub attrac: Attraction,
+    pub att: Attraction,
     pub rep: Repulsion,
 }
 
@@ -19,6 +20,16 @@ impl Particle {
 
     pub fn on_floor(&self) -> bool {
         return self.pos.y <= 0.0
+    }
+
+    pub fn attract(&self, p: &Particle) -> Vec3 {
+        let dir = self.pos - p.pos;
+        return dir.normalize_or_zero() * p.get_accel(self.att.force);
+    }
+
+    pub fn repulse(&self, p: &Particle) -> Vec3 {
+        let dir = -1. * (self.pos - p.pos);
+        return dir.normalize_or_zero() * p.get_accel(self.rep.force);
     }
 }
 
