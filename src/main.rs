@@ -16,7 +16,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_startup_system(setup_light)
         .add_startup_system(setup_camera)
-//        .add_startup_system(setup_floor)
+        .add_startup_system(setup_floor)
         .add_plugin(ParticlePlugin)
         .add_plugin(NoCameraPlayerPlugin)
         .add_plugin(WorldInspectorPlugin::new())
@@ -68,9 +68,9 @@ fn setup_floor(mut commands: Commands,
                ) {
        // plane
     commands.spawn_bundle(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 500.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
         material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
-        transform: Transform::from_xyz(0.0, -0.01, 0.0),
+        transform: Transform::from_xyz(0.0, -1.0, 0.0),
         ..default()
     });
 }
