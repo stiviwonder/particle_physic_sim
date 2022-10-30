@@ -2,6 +2,9 @@
 ***
 
 This is a particle based fluid simulator. (WIP)
+This version is implemented using the most naive method with O(n^2) complexity.
+you can adjust de attraction and repulsion radius/force to get different behaivours.
+the location of those constants is in ``` /particle/mod.rs```
 
 IMAGENES AQUI
 
