@@ -2,7 +2,8 @@ use bevy::prelude::*;
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use particle_physic_sim::{ParticlePlugin, HEIGHT, WIDTH, CAM_X, CAM_Y, CAM_Z};
+use particle_physic_sim::{ParticlePlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
+//use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
 
 fn main() {
     App::new()
@@ -50,8 +51,7 @@ fn setup_light(mut commands: Commands) {
     });
 }
 
-fn setup_camera (mut commands: Commands) {
-
+fn setup_camera(mut commands: Commands) {
     // camera
     let camera = Camera3dBundle {
         transform: Transform::from_xyz(CAM_X, CAM_Y, CAM_Z).looking_at(Vec3::ZERO, Vec3::Y),
@@ -62,11 +62,12 @@ fn setup_camera (mut commands: Commands) {
     commands.spawn_bundle(camera).insert(FlyCam);
 }
 
-fn setup_floor(mut commands: Commands,
-               mut meshes: ResMut<Assets<Mesh>>,
-               mut materials: ResMut<Assets<StandardMaterial>>,
-               ) {
-       // plane
+fn setup_floor(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+) {
+    // plane
     commands.spawn_bundle(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
         material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
