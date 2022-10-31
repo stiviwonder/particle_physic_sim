@@ -2,8 +2,7 @@ use bevy::prelude::*;
 use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
 use bevy_inspector_egui::WorldInspectorPlugin;
 
-use particle_physic_sim::{ParticlePlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
-//use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
+use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
 
 fn main() {
     App::new()
@@ -19,6 +18,7 @@ fn main() {
         .add_startup_system(setup_camera)
         .add_startup_system(setup_floor)
         .add_plugin(ParticlePlugin)
+        .add_plugin(EnviromentPlugin)
         .add_plugin(NoCameraPlayerPlugin)
         .add_plugin(WorldInspectorPlugin::new())
         .run();

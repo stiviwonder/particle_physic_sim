@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 //use std::rand::Rng;
 
-mod entities;
+pub mod entities;
 mod systems;
 
 /* ===== Constants ===== */
@@ -28,7 +28,7 @@ pub struct ParticlePlugin;
 impl Plugin for ParticlePlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system(systems::startup_particles)
+//            .add_startup_system(systems::startup_particles)
             .add_system(systems::shoot_particle)
             .add_system(systems::spawn_locked_particle)
             .add_system(systems::get_new_pos)

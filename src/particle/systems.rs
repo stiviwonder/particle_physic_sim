@@ -4,7 +4,7 @@ use bevy_flycam::FlyCam;
 
 use super::consts::*;
 
-// TODO: Mover lo de la pared a la otra funcion
+// TODO: ahora de esto se encarga el modulo enviroment
 pub fn startup_particles(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -76,6 +76,7 @@ pub fn add_gravity(vel: &mut Vec3) {
     *vel -= Vec3::Y * GRAVITY;
 }
 
+// NOTE: Esto probablemente tambien haya que cambiar
 pub fn get_new_pos(
     time: Res<Time>,
     particles: Query<&Particle>,
@@ -208,35 +209,3 @@ pub fn spawn_locked_particle(
     }
 }
 
-pub fn startup_wall (
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut par_pos: ResMut<ParticlePositions>,
-    mut par_vels: ResMut<ParticleVelocities>,
-    ) {
-        let pid = par_pos.vec.len();
-        let mut init_pos = Vec3::ZERO;
-
-        for i in 0..10 {
-            for j in 0..10 {
-                let p = Particle::new(pid+i+j, 2, true, init_pos, Vec3::ZERO, Attraction::new(0., 0.), Repulsion::new(P_RAD+1., 200.));
-                par_pos.vec.push(p.pos);
-                par_vels.vec.push(p.vel);
-
-                commands
-                    .spawn_bundle(PbrBundle {
-                        mesh: meshes.add(Mesh::from(shape::Icosphere {
-                            radius: p.radius,
-                            subdivisions: SUBDIV,
-                        })),
-                        material: materials.add(Color::GRAY.into()),
-                        transform: Transform::from_xyz(p.pos.x, p.pos.y, p.pos.z),
-                        ..default()
-                    })
-                .insert(p);
-                init_pos.x += 1.0;
-            }
-            init_pos.y += 1.0;
-        }
-}

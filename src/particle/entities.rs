@@ -3,7 +3,7 @@ use bevy::prelude::*;
 use super::consts::*;
 
 // #[derive(Reflect, Component, Default)]
-#[derive(Component)]
+#[derive(Component, Default, Clone, Copy)]
 pub struct Particle {
     pub id: usize,
     pub grp: usize,
@@ -50,7 +50,7 @@ impl Particle {
     }
 }
 
-// #[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Attraction {
     pub radius: f32,
     pub force: f32,
@@ -68,7 +68,7 @@ impl Attraction {
     }
 }
 
-// #[derive(Default)]
+#[derive(Default, Clone, Copy)]
 pub struct Repulsion {
     pub radius: f32,
     pub force: f32,
