@@ -3,45 +3,60 @@ use bevy::prelude::*;
 use crate::particle::entities::*;
 use crate::particle::consts::*;
 
+// TODO: CHUNK_DIM generico con un cuberoot
+//       A lo mejor meter en una fn lo de ajustar la pos
 pub fn startup_chunk(
     mut commands: Commands,
     ) {
 
-    const CHUNK_SIZE: usize = 10;
+    const CHUNK_SIZE: usize = 8;
+    const CHUNK_DIM: usize = 2;
     let cell_dim = Vec3::ONE * 10.;
     let mut chunk = Chunk::default();
     let mut init_pos = Vec3::ZERO;
 
     for i in 0..CHUNK_SIZE {
         let mut parvec: Vec<Particle> = Vec::new();
+        let mut offsize = Vec3::ZERO;
+        let mut pid: usize = 0;
 
-        // FIXME: no funciona bien lo del offsize :(
-        for j in 0..CHUNK_SIZE {
-            let offsize = 1.;
+        for _ in 0..NUM_PAR/CHUNK_SIZE {
             let p = Particle::new(
-                j+i,
+                pid, 
                 0,
                 false, 
-                Vec3::new(
-                    init_pos.x + offsize,
-                    init_pos.y,
-                    init_pos.z,
-                    ),
+                init_pos+offsize,
                 Vec3::ZERO,
                 Attraction::default(), 
                 Repulsion::default()
             );
             parvec.push(p);
+
+            // Adjust the offfsize to fill de cell
+            offsize.x = (offsize.x +1.) % cell_dim.x;
+            if offsize.x % cell_dim.x == 0. { 
+                offsize.z = (offsize.z+1.) % cell_dim.z;
+            };
+            if offsize.z % cell_dim.z == 0. && offsize.x % cell_dim.x == 0.  { 
+                offsize.y = (offsize.y+1.) % cell_dim.y;
+            };
+
+            pid += 1;
         }
 
         let c = Cell::new(i, cell_dim, parvec);
         chunk.cells.push(c);
 
-        if i % 3 == 0 {
+        // Each cell starting position
+        if (i+1) % CHUNK_DIM.pow(2) == 0 {
             init_pos.x = 0.;
-            init_pos.z += 10.
+            init_pos.y += cell_dim.y;
+            init_pos.z = 0.;
+        } else if (i+1) % CHUNK_DIM == 0 { 
+            init_pos.x = 0.;
+            init_pos.z += cell_dim.z;
         } else {
-            init_pos.x += 10.;
+            init_pos.x += cell_dim.x;
         }
     }
 
@@ -81,10 +96,13 @@ pub fn spawn_particles (
 
 pub fn print_cells(
     chunk: Res<Chunk>,
+    kb: Res<Input<KeyCode>>,
     ) {
-    for cell in chunk.cells.iter() {
-        println!("cell id: {}", cell.id);
-        println!("cell density: {}", cell.density);
+    if kb.pressed(KeyCode::F1) {
+        for cell in chunk.cells.iter() {
+            println!("cell id: {}", cell.id);
+            println!("cell density: {}", cell.density);
+        }
     }
 }
 
