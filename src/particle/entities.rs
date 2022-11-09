@@ -35,8 +35,17 @@ impl Particle {
         return force / self.mass;
     }
 
-    pub fn on_floor(&self) -> bool {
-        return self.pos.y <= 0.0;
+    pub fn get_distance(&self, p2: &Particle) -> f32 {
+        //          p - center_p
+        let x = (self.pos.x - p2.pos.x) * (self.pos.x - p2.pos.x);
+        let y = (self.pos.y - p2.pos.y) * (self.pos.y - p2.pos.y);
+        let z = (self.pos.z - p2.pos.z) * (self.pos.z - p2.pos.z);
+
+        return (x + y + z).sqrt();
+    }
+
+    pub fn on_floor(&self, floor: f32) -> bool {
+        return self.pos.y <= floor;
     }
 
     pub fn attract(&self, p: &Particle) -> Vec3 {
