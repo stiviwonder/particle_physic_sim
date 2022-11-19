@@ -80,6 +80,7 @@ pub fn render_particle_sim(mut query: Query<(&mut Transform, With<Particle>, &Pa
     }
 }
 
+// TODO: ccambiar esto para las celdas
 pub fn shoot_particle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -102,7 +103,7 @@ pub fn shoot_particle(
             par_vels.vec.push(p.vel);
 
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,
@@ -116,6 +117,7 @@ pub fn shoot_particle(
     }
 }
 
+// TODO: ccambiar esto para las celdas
 pub fn spawn_locked_particle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -136,7 +138,7 @@ pub fn spawn_locked_particle(
             par_vels.vec.push(p.vel);
 
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,

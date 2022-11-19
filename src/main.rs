@@ -6,14 +6,16 @@ use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z,
 
 fn main() {
     App::new()
-        .insert_resource(WindowDescriptor {
+    .add_plugins(DefaultPlugins.set(WindowPlugin {
+        window: WindowDescriptor {
             width: WIDTH,
             height: HEIGHT,
             title: "Particle Simulator".to_string(),
             resizable: false,
             ..Default::default()
-        })
-        .add_plugins(DefaultPlugins)
+        },
+        ..default()
+        }))
         .add_startup_system(setup_light)
         .add_startup_system(setup_camera)
         .add_startup_system(setup_floor)

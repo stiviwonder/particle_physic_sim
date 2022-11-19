@@ -7,6 +7,40 @@ use crate::particle::consts::*;
 
 use super::consts::*;
 
+// NOTE: revisar si el pid va bien
+fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize) -> Vec<Particle> {
+    let mut parvec: Vec<Particle> = Vec::new();
+    let mut offsize = Vec3::ZERO;
+
+    // TODO: NUMPAR full loading on cells
+    for _ in 0..NUM_PAR/CHUNK_SIZE {
+        let p = Particle::new(
+            *pid, 
+            0,
+            LOCKED, 
+            init_pos+offsize,
+            Vec3::ZERO,
+            Attraction::default(), 
+            Repulsion::default()
+            );
+        parvec.push(p);
+        println!("pid {}", pid);
+
+        // Adjust the offfsize to fill de cell
+        offsize.x = (offsize.x +1.) % cell_dim.x;
+        if offsize.x % cell_dim.x == 0. { 
+            offsize.z = (offsize.z+1.) % cell_dim.z;
+        };
+        if offsize.z % cell_dim.z == 0. && offsize.x % cell_dim.x == 0.  { 
+            offsize.y = (offsize.y+1.) % cell_dim.y;
+        };
+
+        *pid += 1;
+    }
+
+    return parvec;
+}
+
 // TODO: CHUNK_DIM generico con un cuberoot
 //       A lo mejor meter en una fn lo de ajustar la pos
 pub fn startup_chunk(
@@ -21,37 +55,10 @@ pub fn startup_chunk(
     let mut pid: usize = 0;
 
     for i in 0..CHUNK_SIZE {
-        let mut parvec: Vec<Particle> = Vec::new();
-        let mut offsize = Vec3::ZERO;
 
-        // TODO: NUMPAR full loading on cells
-        for _ in 0..NUM_PAR/CHUNK_SIZE {
-            let p = Particle::new(
-                pid, 
-                0,
-                LOCKED, 
-                init_pos+offsize,
-                Vec3::ZERO,
-                Attraction::default(), 
-                Repulsion::default()
-            );
-            parvec.push(p);
-            println!("pid {}", pid);
-
-            // Adjust the offfsize to fill de cell
-            offsize.x = (offsize.x +1.) % cell_dim.x;
-            if offsize.x % cell_dim.x == 0. { 
-                offsize.z = (offsize.z+1.) % cell_dim.z;
-            };
-            if offsize.z % cell_dim.z == 0. && offsize.x % cell_dim.x == 0.  { 
-                offsize.y = (offsize.y+1.) % cell_dim.y;
-            };
-
-            pid += 1;
-        }
-
+        let parvec = new_parvec(init_pos, cell_dim, &mut pid);
         let c = Cell::new(i, init_pos, cell_dim, parvec);
-        chunk.cells[i] = Arc::new(c);
+//        chunk.cells[i] = Arc::new(c);
 
         // Each cell starting position
         if (i+1) % CHUNK_DIM.pow(2) == 0 {
@@ -84,7 +91,7 @@ pub fn spawn_particles (
             par_pos.vec.push(p.pos);
             par_vels.vec.push(p.vel);
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,
@@ -134,7 +141,7 @@ pub fn debug_cube_cell_spawn(
         let pos = cell.parvec.first().unwrap().pos;
         println!("cid {} pos {}", cell.id, pos);
         let offset = cell.dim.x / 2.;
-        commands.spawn_bundle(PbrBundle{
+        commands.spawn(PbrBundle{
             mesh: meshes.add(Mesh::from(shape::Cube {size: cell.dim.x})),
             material: materials.add(Color::rgb_u8(r, g, b).into()),
             transform: Transform::from_xyz(pos.x+offset, pos.y+offset, pos.z+offset),

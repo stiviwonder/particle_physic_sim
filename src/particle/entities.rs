@@ -94,10 +94,12 @@ impl Repulsion {
     }
 }
 
+#[derive(Resource)]
 pub struct ParticlePositions {
     pub vec: Vec<Vec3>,
 }
 
+#[derive(Resource)]
 pub struct ParticleVelocities {
     pub vec: Vec<Vec3>,
 }

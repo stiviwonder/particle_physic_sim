@@ -5,6 +5,7 @@ use crate::particle::consts::*;
 
 use super::consts::*;
 
+#[derive(Resource)]
 pub struct Chunk {
     pub cells: [Arc<Mutex<Cell>>; CHUNK_SIZE],
 }
@@ -17,7 +18,7 @@ impl Chunk {
 }
 
 
-#[derive(Default, Clone, Copy)]
+#[derive(Default, Clone)]
 pub struct Cell {
     pub id: usize,
     pub pos: Vec3,
