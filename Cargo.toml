@@ -10,3 +10,4 @@ bevy = { version = "*", features = ["dynamic"] }
 bevy_flycam = "*"
 bevy-inspector-egui = "*"
 rand = "0.8"
+random_color = "0.6.1"
