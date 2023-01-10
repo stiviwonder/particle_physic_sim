@@ -3,7 +3,7 @@ mod enviroment;
 pub use particle::ParticlePlugin;
 pub use enviroment::EnviromentPlugin;
 
-pub const WIDTH: f32 = 1080.0;
+pub const WIDTH: f32 =  1080.0;
 pub const HEIGHT: f32 = 600.0;
 
 pub const CAM_X: f32 = 0.;

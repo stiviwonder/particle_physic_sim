@@ -57,6 +57,10 @@ impl Particle {
         let dir = -1. * (self.pos - p.pos);
         return dir.normalize_or_zero() * p.get_accel(self.rep.force);
     }
+
+    pub fn print_debug(&self) {
+        println!("Par {}, pos {}", self.id, self.pos);
+    }
 }
 
 #[derive(Default, Clone, Copy)]

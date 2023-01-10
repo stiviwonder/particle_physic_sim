@@ -31,6 +31,7 @@ impl Plugin for EnviromentPlugin {
 //                StartupStage::Startup, 
 //                systems::debug_cube_cell_spawn
 //                )
+            .add_system(systems::update_chunk)
             .add_system(systems::print_cells)
             ;
     }

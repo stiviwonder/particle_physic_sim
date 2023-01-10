@@ -1,17 +1,11 @@
+use crate::enviroment::entities::Chunk;
+
 use super::entities::*;
 use bevy::prelude::*;
 use bevy_flycam::FlyCam;
 
 use super::consts::*;
 
-pub fn get_distance(p1: Vec3, p2: Vec3) -> f32 {
-    //          p - center_p
-    let x = (p1.x - p2.x) * (p1.x - p2.x);
-    let y = (p1.y - p2.y) * (p1.y - p2.y);
-    let z = (p1.z - p2.z) * (p1.z - p2.z);
-
-    return (x + y + z).sqrt();
-}
 
 fn add_gravity(vel: &mut Vec3) {
     *vel -= Vec3::Y * GRAVITY;
@@ -22,7 +16,7 @@ pub fn get_new_pos(
     time: Res<Time>,
     particles: Query<&Particle>,
     mut par_pos: ResMut<ParticlePositions>,
-    mut par_vels: ResMut<ParticleVelocities>,
+    mut par_vel: ResMut<ParticleVelocities>,
 ) {
     let mut i = 0;
 
@@ -55,52 +49,57 @@ pub fn get_new_pos(
 
             // Update resources for sync
             par_pos.vec[i] = new_pos;
-            par_vels.vec[i] = new_vel;
+            par_vel.vec[i] = new_vel;
         }
         i += 1;
     }
 }
 
 pub fn sync_particle_data(
-    mut particles: Query<&mut Particle>,
-    par_pos: Res<ParticlePositions>,
-    par_vels: Res<ParticleVelocities>,
+    chunk: Res<Chunk>,
+    mut par_pos:  ResMut<ParticlePositions>,
+    mut par_vel: ResMut<ParticleVelocities>,
 ) {
     let mut i = 0;
-    for mut p in particles.iter_mut() {
-        p.pos = par_pos.vec[i];
-        p.vel = par_vels.vec[i];
-        i += 1;
+    for cell in chunk.cells.iter() {
+        for p in cell.parvec.iter() {
+//            println!("PID {}, pos {}\t par_pos = {}", p.id, p.pos, par_pos.vec[p.id]);
+            par_pos.vec[p.id] = p.pos;
+            par_vel.vec[p.id] = p.vel;
+        }
     }
 }
 
-pub fn render_particle_sim(mut query: Query<(&mut Transform, With<Particle>, &Particle)>) {
-    for (mut t, _, p) in query.iter_mut() {
-        t.translation = p.pos;
+pub fn render_particle_sim(
+    mut query: Query<(&Particle, &mut Transform)>,
+    par_pos: Res<ParticlePositions>,
+    ) {
+    for (p, mut t) in query.iter_mut() {
+        t.translation = par_pos.vec[p.id];
     }
 }
 
-// TODO: ccambiar esto para las celdas
+// TODO: cambiar esto para las celdas
 pub fn shoot_particle(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     kb: Res<Input<KeyCode>>,
     mut par_pos: ResMut<ParticlePositions>,
-    mut par_vels: ResMut<ParticleVelocities>,
+    mut par_vel: ResMut<ParticleVelocities>,
     cam_pos: Query<&Transform, With<FlyCam>>,
 ) {
     if kb.pressed(KeyCode::F) {
         let i = par_pos.vec.len();
 
-        for cam in cam_pos.get_single() {
+        if let Ok(cam) = cam_pos.get_single() {
             let local_z = cam.local_z();
 
             let init_vel = local_z - local_z * 100.;
 
             let p = Particle::new(i, 1, false, cam.translation, init_vel, Attraction::default(), Repulsion::default());
             par_pos.vec.push(p.pos);
-            par_vels.vec.push(p.vel);
+            par_vel.vec.push(p.vel);
 
             commands
                 .spawn(PbrBundle {
@@ -123,7 +122,7 @@ pub fn spawn_locked_particle(
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut par_pos: ResMut<ParticlePositions>,
-    mut par_vels: ResMut<ParticleVelocities>,
+    mut par_vel: ResMut<ParticleVelocities>,
     kb: Res<Input<KeyCode>>,
     cam_pos: Query<&Transform, With<FlyCam>>,
 ) {
@@ -131,11 +130,11 @@ pub fn spawn_locked_particle(
     if kb.just_pressed(KeyCode::B) {
         let i = par_pos.vec.len();
 
-        for cam in cam_pos.get_single() {
+        if let Ok(cam) = cam_pos.get_single() {
 
             let p = Particle::new(i, 2, true, cam.translation, Vec3::ZERO, Attraction::new(0., 0.), Repulsion::new(P_RAD+1., 200.));
             par_pos.vec.push(p.pos);
-            par_vels.vec.push(p.vel);
+            par_vel.vec.push(p.vel);
 
             commands
                 .spawn(PbrBundle {

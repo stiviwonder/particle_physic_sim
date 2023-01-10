@@ -29,7 +29,7 @@ fn main() {
 fn setup_light(mut commands: Commands) {
     // directional 'sun' light
     const HALF_SIZE: f32 = 10.0;
-    commands.spawn_bundle(DirectionalLightBundle {
+    commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
             // Configure the projection to better fit the scene
             shadow_projection: OrthographicProjection {
@@ -61,7 +61,7 @@ fn setup_camera(mut commands: Commands) {
     };
 
     // add plugin
-    commands.spawn_bundle(camera).insert(FlyCam);
+    commands.spawn(camera).insert(FlyCam);
 }
 
 fn setup_floor(
@@ -70,7 +70,7 @@ fn setup_floor(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // plane
-    commands.spawn_bundle(PbrBundle {
+    commands.spawn(PbrBundle {
         mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
         material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
         transform: Transform::from_xyz(0.0, -1.0, 0.0),
