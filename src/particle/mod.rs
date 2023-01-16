@@ -12,7 +12,7 @@ pub mod consts {
     pub const P_RAD: f32 = 1.;
     pub const P_MASS: f32 = 0.5;
 
-    pub const R_ATR: f32 = 8.0;
+    pub const R_ATR: f32 = 20.0;
     pub const R_REP: f32 = 5.;
     pub const F_ATR: f32 = 0.5;
     pub const F_REP: f32 = 1.;
