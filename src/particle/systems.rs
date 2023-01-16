@@ -40,7 +40,7 @@ pub fn startup_particles(
         par_vels.vec.push(p.vel);
 
         commands
-            .spawn_bundle(PbrBundle {
+            .spawn(PbrBundle {
                 mesh: meshes.add(Mesh::from(shape::Icosphere {
                     radius: p.radius,
                     subdivisions: SUBDIV,
@@ -150,7 +150,7 @@ pub fn shoot_particle(
     if kb.pressed(KeyCode::F) {
         let i = par_pos.vec.len();
 
-        for cam in cam_pos.get_single() {
+        if let Ok(cam) = cam_pos.get_single() {
             let local_z = cam.local_z();
 
             let init_vel = local_z - local_z * 100.;
@@ -160,7 +160,7 @@ pub fn shoot_particle(
             par_vels.vec.push(p.vel);
 
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,
@@ -187,14 +187,14 @@ pub fn spawn_locked_particle(
     if kb.just_pressed(KeyCode::B) {
         let i = par_pos.vec.len();
 
-        for cam in cam_pos.get_single() {
+        if let Ok(cam) = cam_pos.get_single() {
 
             let p = Particle::new(i, 2, true, cam.translation, Vec3::ZERO, Attraction::new(0., 0.), Repulsion::new(P_RAD+1., 200.));
             par_pos.vec.push(p.pos);
             par_vels.vec.push(p.vel);
 
             commands
-                .spawn_bundle(PbrBundle {
+                .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,
@@ -225,7 +225,7 @@ pub fn startup_wall (
                 par_vels.vec.push(p.vel);
 
                 commands
-                    .spawn_bundle(PbrBundle {
+                    .spawn(PbrBundle {
                         mesh: meshes.add(Mesh::from(shape::Icosphere {
                             radius: p.radius,
                             subdivisions: SUBDIV,
