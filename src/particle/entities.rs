@@ -17,6 +17,18 @@ pub struct Particle {
 }
 
 impl Particle {
+    pub const ZERO: Self = Particle {
+            id: 0,
+            grp: 0,
+            locked: false,
+            pos: Vec3::ZERO,
+            radius: P_RAD,
+            mass: P_MASS,
+            vel: Vec3::ZERO,
+            atr: Attraction { radius: R_ATR, force: F_ATR },
+            rep: Repulsion { radius: R_REP, force: F_REP },
+    };
+
     pub fn new(i: usize, g: usize, l: bool, p: Vec3, v: Vec3, a: Attraction, r: Repulsion) -> Self {
         return Particle {
             id: i,
@@ -100,10 +112,10 @@ impl Repulsion {
 
 #[derive(Resource)]
 pub struct ParticlePositions {
-    pub vec: Vec<Vec3>,
+    pub vec: [Vec3; NUM_PAR],
 }
 
 #[derive(Resource)]
 pub struct ParticleVelocities {
-    pub vec: Vec<Vec3>,
+    pub vec: [Vec3; NUM_PAR],
 }

@@ -95,15 +95,15 @@ pub fn spawn_particles (
     mut materials: ResMut<Assets<StandardMaterial>>,
     chunk: Res<Chunk>,
 ) {
-    let mut par_pos = ParticlePositions { vec: Vec::new() };
-    let mut par_vels = ParticleVelocities { vec: Vec::new() };
+    let mut par_pos = ParticlePositions  { vec: [Vec3::ZERO; NUM_PAR]};
+    let mut par_vel = ParticleVelocities { vec: [Vec3::ZERO; NUM_PAR]};
 
     for cell in chunk.cells.iter() {
         let color = random_color();
 
         for p in cell.parvec.iter() {
-            par_pos.vec.push(p.pos);
-            par_vels.vec.push(p.vel);
+            par_pos.vec[p.id] = p.pos;
+            par_vel.vec[p.id] = p.vel;
             commands
                 .spawn(PbrBundle {
                     mesh: meshes.add(Mesh::from(shape::Icosphere {
@@ -118,7 +118,7 @@ pub fn spawn_particles (
         }
     }
     commands.insert_resource(par_pos);
-    commands.insert_resource(par_vels);
+    commands.insert_resource(par_vel);
 }
 
 fn index (x: isize, y: isize, z: isize) -> usize{
@@ -172,9 +172,11 @@ fn index (x: isize, y: isize, z: isize) -> usize{
 pub fn update_chunk (
     time: Res<Time>,
     mut chunk: ResMut<Chunk>,
+    mut par_pos:  ResMut<ParticlePositions>,
+    mut par_vel: ResMut<ParticleVelocities>,
     ) {
 
-    let mut pos_v: Vec<Vec3> = Vec::new();
+    let mut pos_v: [Vec3; NUM_PAR] = [Vec3::ZERO;NUM_PAR];
     for cell in chunk.cells.iter() {
         for p1 in cell.parvec.iter() {
             let mut new_vel = p1.vel;
@@ -205,14 +207,9 @@ pub fn update_chunk (
                 new_vel *= AIR_F;
 
                 let new_pos = p1.pos + new_vel * time.delta_seconds();
-                pos_v.push(new_pos);
+                par_pos.vec[p1.id] = new_pos;
+                par_vel.vec[p1.id] = new_vel;
             }
-        }
-    }
-
-    for mut cell in chunk.cells.iter_mut() {
-        for mut p in cell.parvec.iter_mut() {
-            p.pos = pos_v[p.id];
         }
     }
 }

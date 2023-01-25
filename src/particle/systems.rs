@@ -56,16 +56,15 @@ pub fn get_new_pos(
 }
 
 pub fn sync_particle_data(
-    chunk: Res<Chunk>,
-    mut par_pos:  ResMut<ParticlePositions>,
-    mut par_vel: ResMut<ParticleVelocities>,
+    mut chunk: ResMut<Chunk>,
+    par_pos:  Res<ParticlePositions>,
+    par_vel: Res<ParticleVelocities>,
 ) {
-    let mut i = 0;
-    for cell in chunk.cells.iter() {
-        for p in cell.parvec.iter() {
+    for mut cell in chunk.cells.iter_mut() {
+        for mut p in cell.parvec.iter_mut() {
 //            println!("PID {}, pos {}\t par_pos = {}", p.id, p.pos, par_pos.vec[p.id]);
-            par_pos.vec[p.id] = p.pos;
-            par_vel.vec[p.id] = p.vel;
+            p.pos = par_pos.vec[p.id];
+            p.vel = par_vel.vec[p.id];
         }
     }
 }
@@ -76,78 +75,6 @@ pub fn render_particle_sim(
     ) {
     for (p, mut t) in query.iter_mut() {
         t.translation = par_pos.vec[p.id];
-    }
-}
-
-// TODO: cambiar esto para las celdas
-pub fn shoot_particle(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    kb: Res<Input<KeyCode>>,
-    mut par_pos: ResMut<ParticlePositions>,
-    mut par_vel: ResMut<ParticleVelocities>,
-    cam_pos: Query<&Transform, With<FlyCam>>,
-) {
-    if kb.pressed(KeyCode::F) {
-        let i = par_pos.vec.len();
-
-        if let Ok(cam) = cam_pos.get_single() {
-            let local_z = cam.local_z();
-
-            let init_vel = local_z - local_z * 100.;
-
-            let p = Particle::new(i, 1, false, cam.translation, init_vel, Attraction::default(), Repulsion::default());
-            par_pos.vec.push(p.pos);
-            par_vel.vec.push(p.vel);
-
-            commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: p.radius,
-                        subdivisions: SUBDIV,
-                    })),
-                    material: materials.add(Color::RED.into()),
-                    transform: Transform::from_xyz(p.pos.x, p.pos.y, p.pos.z),
-                    ..default()
-                })
-                .insert(p);
-        }
-    }
-}
-
-// TODO: ccambiar esto para las celdas
-pub fn spawn_locked_particle(
-    mut commands: Commands,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    mut par_pos: ResMut<ParticlePositions>,
-    mut par_vel: ResMut<ParticleVelocities>,
-    kb: Res<Input<KeyCode>>,
-    cam_pos: Query<&Transform, With<FlyCam>>,
-) {
-
-    if kb.just_pressed(KeyCode::B) {
-        let i = par_pos.vec.len();
-
-        if let Ok(cam) = cam_pos.get_single() {
-
-            let p = Particle::new(i, 2, true, cam.translation, Vec3::ZERO, Attraction::new(0., 0.), Repulsion::new(P_RAD+1., 200.));
-            par_pos.vec.push(p.pos);
-            par_vel.vec.push(p.vel);
-
-            commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
-                        radius: p.radius,
-                        subdivisions: SUBDIV,
-                    })),
-                    material: materials.add(Color::GRAY.into()),
-                    transform: Transform::from_xyz(p.pos.x, p.pos.y, p.pos.z),
-                    ..default()
-                })
-                .insert(p);
-        }
     }
 }
 
