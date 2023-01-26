@@ -25,7 +25,3 @@ Space: Up.
 Left Shift: Down.
 
 Mouse to rotate de camera.
-
-F: Fire different group particle.
-
-B: Add a locked particle
