@@ -1,6 +1,7 @@
 use bevy::prelude::*;
 
 use super::consts::*;
+use crate::enviroment::entities::Cell;
 
 // #[derive(Reflect, Component, Default)]
 #[derive(Component, Default, Clone, Copy)]
@@ -73,6 +74,7 @@ impl Particle {
     pub fn print_debug(&self) {
         println!("Par {}, pos {}", self.id, self.pos);
     }
+
 }
 
 #[derive(Default, Clone, Copy)]

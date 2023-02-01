@@ -5,8 +5,12 @@ mod systems;
 
 /* ===== Constants ===== */
 pub mod consts {
-    pub const CHUNK_SIZE: usize = 27;
-    pub const CHUNK_DIM: usize = 3;
+    pub const CHUNK_SIZE: usize = 125;
+    pub const CHUNK_DIM: usize = 5;
+
+    pub const CELL_DIM_X: f32 = 10.;
+    pub const CELL_DIM_Y: f32 = 10.;
+    pub const CELL_DIM_Z: f32 = 10.;
 }
 /* ===================== */
 
@@ -27,11 +31,8 @@ impl Plugin for EnviromentPlugin {
                 StartupStage::Startup, 
                 systems::spawn_particles
                 )
-//            .add_startup_system_to_stage(
-//                StartupStage::Startup, 
-//                systems::debug_cube_cell_spawn
-//                )
             .add_system(systems::update_chunk)
+            .add_system(systems::update_cell_state) 
             .add_system(systems::print_cells)
             ;
     }

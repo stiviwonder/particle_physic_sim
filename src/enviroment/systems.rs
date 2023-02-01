@@ -1,4 +1,3 @@
-
 use super::entities::*;
 use bevy::prelude::*;
 use crate::particle::entities::*;
@@ -52,7 +51,7 @@ pub fn startup_chunk(
     ) {
 
     let mut chunk = Chunk::default();
-    let cell_dim = Vec3::ONE * 10.;
+    let cell_dim = Vec3::new(CELL_DIM_X, CELL_DIM_Y, CELL_DIM_Z);
 
     let mut init_pos = Vec3::ZERO;
 
@@ -150,9 +149,7 @@ fn index (x: isize, y: isize, z: isize) -> usize{
 
                 //                                 print!("({},{},{}, i{})\t", nx,ny,nz, index(nx, ny, nz));
                 //                                 print!("({},{},{}, nid{})\t", nx,ny,nz, nidx);
-                if index(x, y, z) != index(nx, ny, nz) {
-                    chunk.cells[index(x, y, z)].neigh[nidx] = index(nx, ny, nz) as isize;
-                }
+                chunk.cells[index(x, y, z)].neigh[nidx] = index(nx, ny, nz) as isize;
             }
             nidx += 1;
 
@@ -168,7 +165,35 @@ fn index (x: isize, y: isize, z: isize) -> usize{
 //    }
  }
 
-// FIXME: aqui esta el fallo
+fn fit_in_chunk(pos: Vec3) -> Vec3 {
+    let mut new_pos: Vec3 = Vec3::ZERO;
+
+    if pos.x < 0. {
+        new_pos.x = 0.;
+    } else if pos.x > CHUNK_DIM as f32 * CELL_DIM_X {
+        new_pos.x = CHUNK_DIM as f32 * CELL_DIM_X;
+    } else {
+        new_pos.x = pos.x;
+    }
+
+    if pos.y < 0. {
+        new_pos.y = 0.;
+    } else if pos.y > CHUNK_DIM as f32 * CELL_DIM_Y {
+        new_pos.y = CHUNK_DIM as f32 * CELL_DIM_Y;
+    } else {
+        new_pos.y = pos.y;
+    }
+
+    if pos.z < 0. {
+        new_pos.z = 0.;
+    } else if pos.z > CHUNK_DIM as f32 * CELL_DIM_Z {
+        new_pos.z = CHUNK_DIM as f32 * CELL_DIM_Z;
+    } else {
+        new_pos.z = pos.z;
+    }
+
+    return new_pos;
+}
 pub fn update_chunk (
     time: Res<Time>,
     mut chunk: ResMut<Chunk>,
@@ -176,51 +201,253 @@ pub fn update_chunk (
     mut par_vel: ResMut<ParticleVelocities>,
     ) {
 
-    let mut pos_v: [Vec3; NUM_PAR] = [Vec3::ZERO;NUM_PAR];
+    // FIXME: si p1 locked ni te molestes en calcular nada
     for cell in chunk.cells.iter() {
         for p1 in cell.parvec.iter() {
+            if p1.locked {
+                continue;
+            }
+
             let mut new_vel = p1.vel;
 
-            for p2 in cell.parvec.iter() {
-                if p1.id != p2.id && !p1.locked {
-                    let dis = p1.get_distance(p2);
+            // NOTE: si te flipas puedes limitar el check con
+            //       cell_dim y R_ATTR y asi solo mirar las 
+            //       celdas que entren en el radio
+            for n in cell.neigh.iter().filter(|&&x| x != -1) {
+                let idx: usize = *n as usize;
 
-                    if dis <= p2.rep.radius {
-                        new_vel += p2.repulse(p1);
-                    } else if dis <= p2.atr.radius && 
-                              p1.grp == p2.grp {
+                for p2 in chunk.cells[idx].parvec.iter() {
+                    if p1.id != p2.id && !p1.locked {
+                        let dis = p1.get_distance(p2);
 
-                        new_vel += p2.attract(p1);
+                        if dis <= p2.rep.radius {
+                            new_vel += p2.repulse(p1);
+                        } else if dis <= p2.atr.radius && 
+                            p1.grp == p2.grp {
+                                new_vel += p2.attract(p1);
+                            }
                     }
                 }
             }
 
-            if !p1.locked {
+            // gravity
+            new_vel -= Vec3::Y * GRAVITY;
 
-                // gravity
-                new_vel -= Vec3::Y * GRAVITY;
+            if p1.on_floor(0.0) {
+                new_vel.y = new_vel.y.abs() * FLOOR_F;
+            }
 
-                if p1.on_floor(cell.pos.y) {
-                    new_vel.y = new_vel.y.abs() * FLOOR_F;
-                }
+            new_vel *= AIR_F;
 
-                new_vel *= AIR_F;
+            // FIXME: asegurarse que no se sale de los limites del chunk
+            let new_pos = p1.pos + new_vel * time.delta_seconds();
 
-                let new_pos = p1.pos + new_vel * time.delta_seconds();
-                par_pos.vec[p1.id] = new_pos;
-                par_vel.vec[p1.id] = new_vel;
+            par_pos.vec[p1.id] = fit_in_chunk(new_pos);
+            par_vel.vec[p1.id] = new_vel;
+            
+        }
+    }
+}
+
+fn is_inside_cell(pos: Vec3, c: &Cell) -> bool {
+    return  pos.x >= c.pos.x &&
+        pos.x <= c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y &&
+        pos.y <= c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z &&
+        pos.z <= c.pos.z + c.dim.z;
+}
+
+// NOTE: se supone que la nueva pos no tendra un salto tan grande 
+//       como para saltarse una celda entera
+fn new_host_idx(pos: Vec3, c: &Cell) -> usize {
+    // --- LOW PLANE --- //
+    // 1 st row
+    if  pos.x < c.pos.x &&
+        pos.y < c.pos.y &&
+        pos.z < c.pos.z {
+            return 0;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z < c.pos.z {
+            return 1;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z < c.pos.z {
+            return 2;
+        }
+    // 2 nd row
+    else if  pos.x < c.pos.x &&
+        pos.y < c.pos.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 3;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 4;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 5;
+        }
+    // 3 rd row
+    else if  pos.x < c.pos.x &&
+        pos.y < c.pos.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 6;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 7;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y < c.pos.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 8;
+        }
+
+    // --- MID PLANE --- //
+    // 1 st row
+    else if  pos.x < c.pos.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 9;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 10;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 11;
+        }
+    // 2 nd row
+    else if  pos.x < c.pos.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 12;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 14;
+        }
+    // 3 rd row
+    else if  pos.x < c.pos.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 15;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 16;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y >= c.pos.y && pos.y <= c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 17;
+        }
+
+    // --- HIGH PLANE --- //
+    // 1 st row
+    else if  pos.x < c.pos.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 18;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 19;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z < c.pos.z {
+            return 20;
+        }
+    // 2 nd row
+    else if  pos.x < c.pos.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 21;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 22;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z >= c.pos.z && pos.z <= c.pos.z + c.dim.z {
+            return 23;
+        }
+    // 3 rd row
+    else if  pos.x < c.pos.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 24;
+        }
+    else if  pos.x >= c.pos.x && pos.x <= c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 25;
+        }
+    else if  pos.x > c.pos.x + c.dim.x &&
+        pos.y > c.pos.y + c.dim.y &&
+        pos.z > c.pos.z + c.dim.z {
+            return 26;
+        }
+
+    return 13; // index of the actual host cell
+}
+
+// FIXME: Borra los punto clone >:(
+// FIXME: esto peta porque la newpos se mete en -1 solucion en update_chunk
+pub fn update_cell_state(
+    mut chunk: ResMut<Chunk>,
+    par_pos:  Res<ParticlePositions>,
+    ) {
+
+    let cells = chunk.cells.clone(); // esto me gusta muy muy poco
+                                     //
+    let mut ci: usize = 0;
+    for cell in cells.iter() {
+        let mut pi: usize = 0; // paticle postion inside cell vector
+         
+        let parvec = cell.parvec.clone(); // ke poko me gusta esto >:(
+         
+        for p in parvec.iter() {
+            if !is_inside_cell(par_pos.vec[p.id], cell) {
+                let n_idx: usize = new_host_idx(par_pos.vec[p.id], cell);
+                
+                // suponemos que no dejamos que vaya a ningun -1
+                let idx: usize = cell.neigh[n_idx] as usize;
+
+                chunk.cells[idx].parvec.push(*p);
+                chunk.cells[ci].parvec.remove(pi);
+            } else {
+                pi += 1;
             }
         }
+        ci += 1;
     }
 }
 
 pub fn print_cells(
     chunk: Res<Chunk>,
-    kb: Res<Input<KeyCode>>,
+    kb: Res<Input<KeyCode>>
     ) {
-    if kb.pressed(KeyCode::F1) {
-//    if kb.just_pressed(KeyCode::F1) {
-//        for cell in chunk.cells.iter() {
+//    if kb.pressed(KeyCode::F1) {
+    if kb.just_pressed(KeyCode::F1) {
+        for cell in chunk.cells.iter() {
         let cell = &chunk.cells[0];
             println!("cell id: {}", cell.id);
             println!("cell density: {}", cell.density);
@@ -229,7 +456,7 @@ pub fn print_cells(
             println!("========================================");
             println!("========================================");
             
-        // }
+        }
     }
 }
 
