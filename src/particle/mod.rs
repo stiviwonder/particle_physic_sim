@@ -7,16 +7,16 @@ mod systems;
 /* ===== Constants ===== */
 pub mod consts {
 //    pub const NUM_PAR: usize = 162; 
-    pub const NUM_PAR: usize = 125*9; 
+    pub const NUM_PAR: usize = 125*60; 
 
     pub const SUBDIV: usize = 1;
     pub const P_RAD: f32 = 1.;
     pub const P_MASS: f32 = 0.5;
 
-    pub const R_ATR: f32 = 6.0;
-    pub const R_REP: f32 = 5.;
-    pub const F_ATR: f32 = 1.5;
-    pub const F_REP: f32 = 1.;
+    pub const R_ATR: f32 = 10.5;
+    pub const R_REP: f32 = 10.;
+    pub const F_ATR: f32 = 5.5;
+    pub const F_REP: f32 = 6.;
 
     pub const AIR_F: f32 = 0.90;
     pub const GRAVITY: f32 = 9.8;

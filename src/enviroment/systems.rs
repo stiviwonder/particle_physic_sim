@@ -21,7 +21,7 @@ fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize) -> Vec<Particle> 
             *pid, 
             0,
             LOCKED, 
-            init_pos+offsize+rand_offset,
+            fit_in_chunk(init_pos+offsize+rand_offset),
             Vec3::ZERO,
             Attraction::default(), 
             Repulsion::default()
