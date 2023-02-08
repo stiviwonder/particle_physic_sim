@@ -7,7 +7,7 @@ use rand::Rng;
 use super::consts::*;
 
 // NOTE: revisar si el pid va bien
-fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize) -> Vec<Particle> {
+fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize, gid: usize) -> Vec<Particle> {
     let mut parvec: Vec<Particle> = Vec::new();
     let mut offsize = Vec3::ZERO;
 
@@ -56,10 +56,11 @@ pub fn startup_chunk(
     let mut init_pos = Vec3::ZERO;
 
     let mut pid: usize = 0;
+    let mut gid: usize = 0;
 
     for i in 0..CHUNK_SIZE {
 
-        let parvec = new_parvec(init_pos, cell_dim, &mut pid);
+        let parvec = new_parvec(init_pos, cell_dim, &mut pid, gid);
         let c = Cell::new(i, init_pos, cell_dim, parvec);
 //        chunk.cells[i] = Arc::new(c);
         chunk.cells[i] = c;
@@ -75,6 +76,10 @@ pub fn startup_chunk(
         } else {
             init_pos.x += cell_dim.x;
         }
+
+        if GROUPS == true {
+            gid += 1;
+        }
     }
 
     commands.insert_resource(chunk);
@@ -88,6 +93,7 @@ pub fn random_color() -> Color {
         return Color::rgb(r, g, b);
 }
 
+// TODO: Mover al modulo de particulas
 pub fn spawn_particles (
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -98,8 +104,11 @@ pub fn spawn_particles (
     let mut par_vel = ParticleVelocities { vec: [Vec3::ZERO; NUM_PAR]};
 
     for cell in chunk.cells.iter() {
-        let color = random_color();
-
+        let color = if GROUPS == true {
+            random_color()
+        } else {
+            Color::CYAN
+        };
         for p in cell.parvec.iter() {
             par_pos.vec[p.id] = p.pos;
             par_vel.vec[p.id] = p.vel;
