@@ -19,7 +19,7 @@ fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize, gid: usize) -> Ve
 
         let p = Particle::new(
             *pid, 
-            0,
+            gid,
             LOCKED, 
             fit_in_chunk(init_pos+offsize+rand_offset),
             Vec3::ZERO,
@@ -203,6 +203,23 @@ fn fit_in_chunk(pos: Vec3) -> Vec3 {
 
     return new_pos;
 }
+
+fn reject_vel(par: &Particle, vel: Vec3) -> Vec3 {
+    let chunk: f32 = CHUNK_DIM as f32;
+    let borders: [f32;6] = [0., 0., 0., CELL_DIM_X*chunk, CELL_DIM_Y*chunk, CELL_DIM_Z*chunk,];
+    let normals: [Vec3;6] = [Vec3::X, Vec3::Y, Vec3::Z, Vec3::NEG_X, Vec3::NEG_Y, Vec3::NEG_Z,];
+    let mut new_vel = vel;
+
+    for i in 0..5 {
+        if par.on_border(borders[i], i) {
+            let nvec: Vec3 = normals[i];
+            new_vel = (new_vel - (2. * (new_vel.dot_into_vec(nvec)) * nvec)) * FLOOR_F;
+        }
+    }
+
+    return new_vel;
+}
+
 pub fn update_chunk (
     time: Res<Time>,
     mut chunk: ResMut<Chunk>,
@@ -242,13 +259,14 @@ pub fn update_chunk (
             // gravity
             new_vel -= Vec3::Y * GRAVITY;
 
-            if p1.on_floor(0.0) {
-                new_vel.y = new_vel.y.abs() * FLOOR_F;
-            }
+            // rejection vector in case of a boundary collision
+            new_vel = reject_vel(p1, new_vel);
+//            if p1.pos.y == 0. {
+//                new_vel.y = new_vel.y.abs() * FLOOR_F;
+//            }
 
             new_vel *= AIR_F;
 
-            // FIXME: asegurarse que no se sale de los limites del chunk
             let new_pos = p1.pos + new_vel * time.delta_seconds();
 
             par_pos.vec[p1.id] = fit_in_chunk(new_pos);

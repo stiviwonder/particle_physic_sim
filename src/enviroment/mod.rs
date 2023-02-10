@@ -10,9 +10,9 @@ pub mod consts {
 //    pub const CHUNK_SIZE: usize = 27;
 //    pub const CHUNK_DIM: usize = 3;
 
-    pub const CELL_DIM_X: f32 = 70.;
-    pub const CELL_DIM_Y: f32 = 50.;
-    pub const CELL_DIM_Z: f32 = 70.;
+    pub const CELL_DIM_X: f32 = 60.;
+    pub const CELL_DIM_Y: f32 = 60.;
+    pub const CELL_DIM_Z: f32 = 60.;
 
     pub const GROUPS: bool = false;
 }

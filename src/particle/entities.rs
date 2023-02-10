@@ -57,8 +57,13 @@ impl Particle {
         return (x + y + z).sqrt();
     }
 
-    pub fn on_floor(&self, floor: f32) -> bool {
-        return self.pos.y <= floor;
+    pub fn on_border(&self, border_pos: f32, border: usize) -> bool {
+        match border {
+            0 | 3 => return self.pos.x == border_pos,
+            1 | 4 => return self.pos.y == border_pos,
+            2 | 6 => return self.pos.z == border_pos,
+            _ => return false,
+        };
     }
 
     pub fn attract(&self, p: &Particle) -> Vec3 {
