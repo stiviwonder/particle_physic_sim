@@ -6,12 +6,14 @@ use super::consts::*;
 
 #[derive(Resource)]
 pub struct Chunk {
-    pub cells: [Cell; CHUNK_SIZE as usize],
+//    pub cells: [Cell; CHUNK_SIZE as usize],
+    pub cells: Vec<Cell>,
 }
 impl Chunk {
     pub fn default() -> Self {
         return Chunk {
-            cells: [Cell::EMPTY; CHUNK_SIZE],
+//            cells: [Cell::EMPTY; CHUNK_SIZE],
+            cells: vec![Cell::EMPTY; CHUNK_SIZE],
         };
     }
 }

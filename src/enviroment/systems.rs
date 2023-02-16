@@ -6,11 +6,13 @@ use rand::Rng;
 
 use super::consts::*;
 
-// NOTE: revisar si el pid va bien
+// FIXME: Si NUMPAR es mas pequeño que el CHUNK_SIZE la division es 0 y no se creara
+//        ninguna Particula
 fn new_parvec(init_pos: Vec3, cell_dim: Vec3, pid: &mut usize, gid: usize) -> Vec<Particle> {
     let mut parvec: Vec<Particle> = Vec::new();
     let mut offsize = Vec3::ZERO;
 
+//        println!("AAAAAAAAAA");
     // TODO: NUMPAR full loading on cells
     for _ in 0..NUM_PAR/CHUNK_SIZE {
         let rand_offset: Vec3 = Vec3::new(rand::thread_rng().gen_range(0.0..2.0),
@@ -61,9 +63,13 @@ pub fn startup_chunk(
     for i in 0..CHUNK_SIZE {
 
         let parvec = new_parvec(init_pos, cell_dim, &mut pid, gid);
+        for p in parvec.iter() {
+            p.print_debug();
+        }
         let c = Cell::new(i, init_pos, cell_dim, parvec);
-//        chunk.cells[i] = Arc::new(c);
         chunk.cells[i] = c;
+//        chunk.cells.push(c);
+//        chunk.cells[i].print_particles();
 
         // Each cell starting position
         if (i+1) % CHUNK_DIM.pow(2) == 0 {
