@@ -7,12 +7,12 @@ mod systems;
 /* ===== Constants ===== */
 pub mod consts {
 //    pub const NUM_PAR: usize = 27*5; 
-//    pub const NUM_PAR: usize = 216*4; 
-    pub const NUM_PAR: usize = 1000*16; 
+    pub const NUM_PAR: usize = 216*4; 
+//    pub const NUM_PAR: usize = 1000*3; 
 
     pub const SUBDIV: usize = 1;
     pub const P_RAD: f32 = 1.;
-    pub const P_MASS: f32 = 15.5;
+    pub const P_MASS: f32 = 5.5;
 
     pub const R_ATR: f32 = 15.5;
     pub const R_REP: f32 = 15.;

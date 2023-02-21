@@ -234,7 +234,7 @@ pub fn update_chunk (
     ) {
 
     // FIXME: si p1 locked ni te molestes en calcular nada
-    for cell in chunk.cells.iter() {
+    for cell in chunk.cells.iter().filter(|x| x.density != 0) {
         for p1 in cell.parvec.iter() {
             if p1.locked {
                 continue;
@@ -465,7 +465,10 @@ pub fn update_cell_state(
                 let idx: usize = cell.neigh[n_idx] as usize;
 
                 chunk.cells[idx].parvec.push(*p);
+                chunk.cells[idx].density += 1;
+
                 chunk.cells[ci].parvec.remove(pi);
+                chunk.cells[ci].density -= 1;
             } else {
                 pi += 1;
             }
