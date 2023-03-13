@@ -1,5 +1,6 @@
 use bevy::prelude::*;
-use bevy_flycam::{FlyCam, NoCameraPlayerPlugin};
+use bevy_stl::StlPlugin;
+use bevy_flycam::{FlyCam, NoCameraPlayerPlugin, MovementSettings};
 use bevy_inspector_egui::WorldInspectorPlugin;
 
 use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
@@ -16,14 +17,15 @@ fn main() {
         },
         ..default()
         }))
-        .add_startup_system(setup_light)
-        .add_startup_system(setup_camera)
-        .add_startup_system(setup_floor)
-        .add_plugin(ParticlePlugin)
-        .add_plugin(EnviromentPlugin)
-        .add_plugin(NoCameraPlayerPlugin)
-        .add_plugin(WorldInspectorPlugin::new())
-        .run();
+    .add_plugin(StlPlugin)
+    .add_startup_system(setup_light)
+    .add_startup_system(setup_camera)
+    .add_startup_system(setup_floor)
+    .add_plugin(ParticlePlugin)
+    .add_plugin(EnviromentPlugin)
+    .add_plugin(NoCameraPlayerPlugin)
+    .add_plugin(WorldInspectorPlugin::new())
+    .run();
 }
 
 fn setup_light(mut commands: Commands) {
@@ -53,7 +55,10 @@ fn setup_light(mut commands: Commands) {
     });
 }
 
-fn setup_camera(mut commands: Commands) {
+fn setup_camera(
+    mut commands: Commands,
+    mut settings: ResMut<MovementSettings>,
+    ) {
     // camera
     let camera = Camera3dBundle {
         transform: Transform::from_xyz(CAM_X, CAM_Y, CAM_Z).looking_at(Vec3::ZERO, Vec3::Y),
@@ -62,6 +67,8 @@ fn setup_camera(mut commands: Commands) {
 
     // add plugin
     commands.spawn(camera).insert(FlyCam);
+
+    settings.speed *= 20.0;
 }
 
 fn setup_floor(
