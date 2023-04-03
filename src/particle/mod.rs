@@ -7,7 +7,7 @@ mod systems;
 /* ===== Constants ===== */
 pub mod consts {
 //    pub const NUM_PAR: usize = 27*5; 
-    pub const NUM_PAR: usize = 216*4; 
+    pub const NUM_PAR: usize = 216*5; 
 //    pub const NUM_PAR: usize = 1000*3; 
 
     pub const SUBDIV: usize = 1;

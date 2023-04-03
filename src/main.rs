@@ -1,74 +1,57 @@
 use bevy::prelude::*;
-use bevy_stl::StlPlugin;
-use bevy_flycam::{FlyCam, NoCameraPlayerPlugin, MovementSettings};
-use bevy_inspector_egui::WorldInspectorPlugin;
+use bevy_asset_loader::prelude::*;
+use std::f32::consts::PI;
+//use bevy_stl::StlPlugin;
+//use bevy_flycam::{FlyCam, NoCameraPlayerPlugin, MovementSettings};
 
-use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z, HEIGHT, WIDTH};
+use particle_physic_sim::{ParticlePlugin, EnviromentPlugin, CAM_X, CAM_Y, CAM_Z};
 
 fn main() {
     App::new()
-    .add_plugins(DefaultPlugins.set(WindowPlugin {
-        window: WindowDescriptor {
-            width: WIDTH,
-            height: HEIGHT,
-            title: "Particle Simulator".to_string(),
-            resizable: false,
-            ..Default::default()
-        },
-        ..default()
-        }))
-    .add_plugin(StlPlugin)
-    .add_startup_system(setup_light)
-    .add_startup_system(setup_camera)
-    .add_startup_system(setup_floor)
-    .add_plugin(ParticlePlugin)
-    .add_plugin(EnviromentPlugin)
-    .add_plugin(NoCameraPlayerPlugin)
-    .add_plugin(WorldInspectorPlugin::new())
-    .run();
+        .add_plugins(DefaultPlugins)
+//        .add_plugin(StlPlugin)
+        .add_startup_system(setup_light)
+        .add_startup_system(setup_camera)
+        .add_startup_system(setup_floor)
+        .add_plugin(ParticlePlugin)
+        .add_plugin(EnviromentPlugin)
+//        .add_plugin(NoCameraPlayerPlugin)
+        .run();
 }
 
 fn setup_light(mut commands: Commands) {
-    // directional 'sun' light
-    const HALF_SIZE: f32 = 10.0;
+
+        // directional 'sun' light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            // Configure the projection to better fit the scene
-            shadow_projection: OrthographicProjection {
-                left: -HALF_SIZE,
-                right: HALF_SIZE,
-                bottom: -HALF_SIZE,
-                top: HALF_SIZE,
-                near: -10.0 * HALF_SIZE,
-                far: 10.0 * HALF_SIZE,
-                ..default()
-            },
             shadows_enabled: true,
             ..default()
         },
         transform: Transform {
             translation: Vec3::new(0.0, 2.0, 0.0),
-            rotation: Quat::from_rotation_x(-std::f32::consts::FRAC_PI_4),
+            rotation: Quat::from_rotation_x(-PI / 4.),
             ..default()
-        },
+        }
+        .into(),
         ..default()
     });
 }
 
 fn setup_camera(
     mut commands: Commands,
-    mut settings: ResMut<MovementSettings>,
+//    mut settings: ResMut<MovementSettings>,
     ) {
     // camera
     let camera = Camera3dBundle {
-        transform: Transform::from_xyz(CAM_X, CAM_Y, CAM_Z).looking_at(Vec3::ZERO, Vec3::Y),
+        transform: Transform::from_xyz(CAM_X, CAM_Y, CAM_Z).looking_at(Vec3::new(100., 0., 100.), Vec3::Y),
         ..Default::default()
     };
 
     // add plugin
-    commands.spawn(camera).insert(FlyCam);
+    commands.spawn(camera);
+//        .insert(FlyCam);
 
-    settings.speed *= 20.0;
+//    settings.speed *= 20.0;
 }
 
 fn setup_floor(
@@ -78,7 +61,7 @@ fn setup_floor(
 ) {
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(Mesh::from(shape::Plane { size: 50.0 })),
+        mesh: meshes.add(Mesh::from(shape::Plane::from_size(50.0))),
         material: materials.add(Color::rgb(0.5, 0.5, 0.5).into()),
         transform: Transform::from_xyz(0.0, -1.0, 0.0),
         ..default()

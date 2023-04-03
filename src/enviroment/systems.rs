@@ -4,6 +4,8 @@ use crate::particle::entities::*;
 use crate::particle::consts::*;
 use rand::Rng;
 
+//use bevy_stl::StlPlugin;
+
 use super::consts::*;
 
 // FIXME: Si NUMPAR es mas pequeño que el CHUNK_SIZE la division es 0 y no se creara
@@ -115,15 +117,23 @@ pub fn spawn_particles (
         } else {
             Color::CYAN
         };
+
         for p in cell.parvec.iter() {
             par_pos.vec[p.id] = p.pos;
             par_vel.vec[p.id] = p.vel;
-            commands
-                .spawn(PbrBundle {
-                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+
+            let shape = shape::Icosphere {
                         radius: p.radius,
                         subdivisions: SUBDIV,
-                    })),
+            }.try_into().unwrap();
+
+            commands
+                .spawn(PbrBundle {
+//                    mesh: meshes.add(Mesh::from(shape::Icosphere {
+//                        radius: p.radius,
+//                        subdivisions: SUBDIV,
+//                    })),
+                    mesh: meshes.add(shape),
                     material: materials.add(color.into()),
                     transform: Transform::from_xyz(p.pos.x, p.pos.y, p.pos.z),
                     ..default()
@@ -133,6 +143,44 @@ pub fn spawn_particles (
     }
     commands.insert_resource(par_pos);
     commands.insert_resource(par_vel);
+}
+
+pub fn spawn_stl(
+    mut commands: Commands,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    asset_server: Res<AssetServer>,
+    ) {
+    let mesh_handle = asset_server.load("torus.stl");
+    let c: Container = Container {  };
+        commands
+        .spawn(PbrBundle {
+            mesh: mesh_handle,
+            material: materials.add(Color::rgb(0.9, 0.4, 0.3).into()),
+            transform: Transform::from_xyz(0.0, 0.0, 0.0),
+            ..default()
+        })
+        .insert(c);
+
+}
+
+pub fn get_container_info(
+    mut query: Query<(&mut Handle<Mesh>, &Container)>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    asset_server: Res<AssetServer>,
+    ) {
+    use bevy::asset::LoadState;
+
+
+    if let Ok ((mut hm, c)) = query.get_single() {
+
+//        while asset_server.get_load_state(hm) != LoadState::Loaded {}
+        let stl_id = hm.id();
+        let stl = meshes.get(hm);
+        println!("stl_loaded {:#?}", stl_id);
+        // println!("stl {:#?}", stl.unwrap().count_vertices());
+    }
+
 }
 
 fn index (x: isize, y: isize, z: isize) -> usize{
@@ -484,7 +532,6 @@ pub fn print_cells(
 //    if kb.pressed(KeyCode::F1) {
     if kb.just_pressed(KeyCode::F1) {
         for cell in chunk.cells.iter() {
-        let cell = &chunk.cells[0];
             println!("cell id: {}", cell.id);
             println!("cell density: {}", cell.density);
             println!("cell pos: {}", cell.pos);
@@ -495,4 +542,3 @@ pub fn print_cells(
         }
     }
 }
-

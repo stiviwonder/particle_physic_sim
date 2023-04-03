@@ -1,6 +1,6 @@
 use bevy::prelude::*;
 use crate::particle::entities::Particle;
-use crate::particle::consts::*;
+//use crate::particle::consts::*;
 
 use super::consts::*;
 
@@ -27,6 +27,10 @@ pub struct Cell {
     pub density: usize,
     pub parvec: Vec<Particle>, 
     pub neigh: [isize; 27],
+}
+
+#[derive(Component, Default, Clone)]
+pub struct Container {
 }
 
 // NOTE: implementar aqui las nuevas posiciones??

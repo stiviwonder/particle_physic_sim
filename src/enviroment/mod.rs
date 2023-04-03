@@ -25,20 +25,29 @@ pub struct EnviromentPlugin;
 impl Plugin for EnviromentPlugin {
     fn build(&self, app: &mut App) {
         app
-            .add_startup_system_to_stage(
-                StartupStage::PreStartup, 
+            .add_startup_system(
+                systems::spawn_stl
+                    .in_base_set(StartupSet::PreStartup)
+                )
+            .add_startup_system(
                 systems::startup_chunk
+                    .in_base_set(StartupSet::PreStartup)
                 )
-            .add_startup_system_to_stage(
-                StartupStage::Startup, 
+            .add_startup_system(
                 systems::get_cell_neighbours
+                    .in_base_set(StartupSet::Startup)
                 )
-            .add_startup_system_to_stage(
-                StartupStage::Startup, 
+            .add_startup_system(
                 systems::spawn_particles
+                    .in_base_set(StartupSet::Startup)
                 )
+//            .add_startup_system(
+//                systems::get_container_info
+//                    .in_base_set(StartupSet::PostStartup)
+//                )
+
             .add_system(systems::update_chunk)
-            .add_system(systems::update_cell_state) 
+            .add_system(systems::update_cell_state)
             .add_system(systems::print_cells)
             ;
     }
